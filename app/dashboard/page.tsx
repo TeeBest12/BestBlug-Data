@@ -25,6 +25,7 @@ import {
   Sparkles,
   X,
   Gift,
+  Menu,
 } from "lucide-react";
 import {
   AreaChart,
@@ -38,32 +39,32 @@ import {
 
 const services = [
   {
-    title: "MTN Data",
+    title: "Buy Data",
     icon: Database,
     href: "/dashboard/buy-data",
-    color: "bg-blue-50 text-blue-600 border-blue-100",
-    badge: "SME",
+    color: "bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30",
+    badge: "Cheap SME",
   },
   {
-    title: "Airtel Data",
+    title: "Buy Airtime",
     icon: Phone,
-    href: "/dashboard/buy-data",
-    color: "bg-red-50 text-red-600 border-red-100",
-    badge: "CG",
+    href: "/dashboard/buy-airtime",
+    color: "bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/30",
+    badge: "10% Discount",
   },
   {
-    title: "Glo Data",
+    title: "TV Subscription",
     icon: Tv,
-    href: "/dashboard/buy-data",
-    color: "bg-green-50 text-green-600 border-green-100",
-    badge: "Gifting",
+    href: "/dashboard/cable-tv",
+    color: "bg-green-50 dark:bg-green-950/20 text-green-600 dark:text-green-400 border-green-100 dark:border-green-900/30",
+    badge: "Instant DSTV",
   },
   {
-    title: "9Mobile Data",
+    title: "Electricity Payment",
     icon: Zap,
-    href: "/dashboard/buy-data",
-    color: "bg-yellow-50 text-yellow-600 border-yellow-100",
-    badge: "Lite",
+    href: "/dashboard/electricity",
+    color: "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30",
+    badge: "Zero Fee",
   },
 ];
 
@@ -127,6 +128,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -181,6 +183,119 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-[#F1F5F9] dark:bg-[#0B0F19] font-sans text-slate-900 dark:text-slate-100 overflow-hidden w-full transition-colors duration-200">
+      {/* Mobile Drawer Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Drawer Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 w-60 bg-[#0F172A] text-slate-300 flex flex-col shrink-0 z-50 border-r border-slate-800 transition-transform duration-300 transform lg:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="p-6 border-b border-slate-700/50 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">BB</div>
+            <span className="font-bold text-white tracking-tight text-base">BestBlug Pro</span>
+          </Link>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="text-slate-400 hover:text-white cursor-pointer p-1">
+            <X size={18} />
+          </button>
+        </div>
+        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+          <Link
+            href="/dashboard"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 bg-blue-600 text-white rounded-md text-xs uppercase tracking-wider font-bold"
+          >
+            <Wallet size={16} />
+            Dashboard
+          </Link>
+          <Link
+            href="/dashboard/buy-data"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <Database size={16} />
+            Buy Data
+          </Link>
+          <Link
+            href="/dashboard/buy-airtime"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <Phone size={16} />
+            Buy Airtime
+          </Link>
+          <Link
+            href="/dashboard/cable-tv"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <Tv size={16} />
+            TV Subscription
+          </Link>
+          <Link
+            href="/dashboard/electricity"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <Zap size={16} />
+            Electricity
+          </Link>
+          <Link
+            href="/dashboard/fund-wallet"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <CreditCard size={16} />
+            Fund Wallet
+          </Link>
+          <Link
+            href="/dashboard/transactions"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <History size={16} />
+            Transactions
+          </Link>
+          <Link
+            href="/dashboard/profile"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <User size={16} />
+            Profile
+          </Link>
+          <Link
+            href="/dashboard/support"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <Headphones size={16} />
+            Support
+          </Link>
+          <Link
+            href="/dashboard/settings"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <Settings size={16} />
+            Settings
+          </Link>
+        </nav>
+        <div className="p-4 border-t border-slate-800 text-[10px] uppercase tracking-widest text-slate-500 font-extrabold flex flex-col gap-3">
+          <span>Support: +234 812 345 6789</span>
+          <Link
+            href="/login"
+            className="flex items-center justify-center gap-2 rounded bg-slate-800 py-2 font-bold text-white hover:bg-slate-700 transition-all text-center uppercase text-[9px]"
+          >
+            <LogOut size={12} />
+            Logout
+          </Link>
+        </div>
+      </aside>
+
       {/* Sidebar Navigation */}
       <aside className="w-60 bg-[#0F172A] text-slate-300 flex flex-col shrink-0 hidden lg:flex border-r border-slate-800">
         <div className="p-6 border-b border-slate-700/50">
@@ -189,7 +304,7 @@ export default function DashboardPage() {
             <span className="font-bold text-white tracking-tight text-base">BestBlug Pro</span>
           </Link>
         </div>
-        <nav className="flex-1 py-4 px-3 space-y-1">
+        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto animate-fade-in">
           <Link
             href="/dashboard"
             className="flex items-center gap-3 px-3 py-2 bg-blue-600 text-white rounded-md text-xs uppercase tracking-wider font-bold"
@@ -203,6 +318,27 @@ export default function DashboardPage() {
           >
             <Database size={16} />
             Buy Data
+          </Link>
+          <Link
+            href="/dashboard/buy-airtime"
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <Phone size={16} />
+            Buy Airtime
+          </Link>
+          <Link
+            href="/dashboard/cable-tv"
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <Tv size={16} />
+            TV Subscription
+          </Link>
+          <Link
+            href="/dashboard/electricity"
+            className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-md text-xs uppercase tracking-wider font-bold text-slate-400 hover:text-white transition-all"
+          >
+            <Zap size={16} />
+            Electricity
           </Link>
           <Link
             href="/dashboard/fund-wallet"
@@ -256,9 +392,19 @@ export default function DashboardPage() {
       <main className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="h-16 bg-white dark:bg-[#111827] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 transition-colors duration-200">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-400 font-semibold uppercase">Welcome back,</span>
-            <span className="font-extrabold text-slate-800 dark:text-white uppercase">TeeBest12</span>
+          <div className="flex items-center gap-3 text-xs">
+            {/* Hamburger trigger for mobile navbar */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden cursor-pointer"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-400 font-semibold uppercase hidden sm:inline">Welcome back,</span>
+              <span className="font-extrabold text-slate-800 dark:text-white uppercase">TeeBest12</span>
+            </div>
           </div>
           <div className="flex items-center gap-6">
             <div className="flex flex-col items-end">
@@ -352,64 +498,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Spending Trends Chart */}
-          <div className="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-slate-800/80 shadow-sm transition-colors duration-200">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/60 pb-4 mb-4">
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Spending Analysis</h3>
-                <h2 className="text-lg font-black text-slate-800 dark:text-white tracking-tight mt-0.5">Monthly Category Trends</h2>
-              </div>
-              <div className="flex flex-wrap items-center gap-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-blue-500 shrink-0"></span> Data</span>
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-red-500 shrink-0"></span> Airtime</span>
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-green-500 shrink-0"></span> Cable TV</span>
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-amber-500 shrink-0"></span> Electricity</span>
-              </div>
-            </div>
-            <div className="h-64 w-full">
-              {mounted ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={monthlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorData" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.15}/>
-                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorAirtime" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.15}/>
-                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorCable" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.15}/>
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorElectricity" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.15}/>
-                        <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#1f2937" : "#E2E8F0"} />
-                    <XAxis dataKey="month" tickLine={false} axisLine={false} stroke={isDark ? "#475569" : "#94A3B8"} fontSize={11} fontWeight="bold" />
-                    <YAxis tickLine={false} axisLine={false} stroke={isDark ? "#475569" : "#94A3B8"} fontSize={11} fontWeight="bold" tickFormatter={(v) => `₦${v}`} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: isDark ? "#1e293b" : "#0F172A", borderRadius: "8px", border: "none", color: "#FFF" }} 
-                      labelStyle={{ fontWeight: "bold", marginBottom: "4px", fontSize: "11px", color: isDark ? "#94a3b8" : "#94A3B8" }}
-                      itemStyle={{ fontSize: "11px", fontWeight: "bold", padding: "1px 0" }}
-                      formatter={(value: any) => [`₦${Number(value).toLocaleString()}`, ""]}
-                    />
-                    <Area type="monotone" dataKey="Data" stroke="#3B82F6" strokeWidth={2} fillOpacity={1} fill="url(#colorData)" />
-                    <Area type="monotone" dataKey="Airtime" stroke="#EF4444" strokeWidth={2} fillOpacity={1} fill="url(#colorAirtime)" />
-                    <Area type="monotone" dataKey="Cable" stroke="#10B981" strokeWidth={2} fillOpacity={1} fill="url(#colorCable)" />
-                    <Area type="monotone" dataKey="Electricity" stroke="#F59E0B" strokeWidth={2} fillOpacity={1} fill="url(#colorElectricity)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-slate-900/50 rounded-lg">
-                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest animate-pulse">Loading Chart Engine...</span>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Spending analysis section removed as requested */}
 
           {/* Core Layout Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
@@ -426,7 +515,7 @@ export default function DashboardPage() {
                       className={`flex flex-col items-center justify-center p-3 rounded-lg border text-center transition-all hover:bg-blue-600 hover:text-white hover:border-blue-600 group dark:bg-slate-800/40 dark:border-slate-800 ${service.color}`}
                     >
                       <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center mb-2 shadow-sm text-slate-800 dark:text-slate-200 group-hover:bg-blue-500 group-hover:text-white transition-all">
-                        <Database size={16} />
+                        <service.icon size={16} />
                       </div>
                       <span className="text-[11px] font-black uppercase tracking-tight">{service.title}</span>
                       <span className="text-[9px] opacity-70 uppercase tracking-wider">{service.badge}</span>
