@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import SessionGuard from "./components/SessionGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BestBlug - Buy Affordable Mobile Data & Airtime Instantly",
-  description: "Premium instant VTU data, airtime, utility payments, and wallet management on BestBlug Pro.",
+  title: "SurePlug - Buy Affordable Mobile Data & Airtime Instantly",
+  description: "Premium instant VTU data, airtime, utility payments, and wallet management on SurePlug Pro.",
 };
 
 export default function RootLayout({
@@ -42,7 +43,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SessionGuard />
+        {children}
+      </body>
     </html>
   );
 }
+

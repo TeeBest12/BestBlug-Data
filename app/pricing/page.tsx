@@ -36,7 +36,7 @@ export default function PricingPage() {
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between">
         <Link href="/" className="text-xl font-bold">
-          BestBlug
+          SurePlug
         </Link>
 
         <div className="flex items-center gap-4 text-sm font-medium">

@@ -15,7 +15,10 @@ import {
   ArrowRight,
   Sparkles,
   CheckCircle,
-  Home
+  Home,
+  Menu,
+  X,
+  Settings
 } from "lucide-react";
 
 interface ChatMessage {
@@ -99,14 +102,14 @@ const DEFAULT_CHATS: ChatMessage[] = [
   {
     id: "welcome-1",
     sender: "system",
-    text: "Welcome to BestBlug Premium Live Support! 🛡️ Our agents are online and ready to assist you in real-time.",
+    text: "Welcome to SurePlug Premium Live Support! 🛡️ Our agents are online and ready to assist you in real-time.",
     timestamp: "10:00 AM",
     userEmail: "all",
   },
   {
     id: "welcome-2",
     sender: "admin",
-    text: "Hello! Thank you for contacting BestBlug. If you have any questions regarding pending wallet funding, failed data delivery, or billing, please send us a message here.",
+    text: "Hello! Thank you for contacting SurePlug. If you have any questions regarding pending wallet funding, failed data delivery, or billing, please send us a message here.",
     timestamp: "10:01 AM",
     userEmail: "all",
   }
@@ -119,6 +122,8 @@ export default function AdminPage() {
   const [selectedUserEmail, setSelectedUserEmail] = useState<string>("");
   const [adminReply, setAdminReply] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -146,6 +151,25 @@ export default function AdminPage() {
       setMessages(DEFAULT_CHATS);
       localStorage.setItem("datasub_live_chats", JSON.stringify(DEFAULT_CHATS));
     }
+
+    // Load users from localStorage
+    const savedUsers = localStorage.getItem("datasub_admin_users");
+    if (savedUsers) {
+      try {
+        setAdminUsers(JSON.parse(savedUsers));
+      } catch (e) {
+        setAdminUsers([]);
+      }
+    } else {
+      const defaultUsers = [
+        { id: 1, name: "John Doe", email: "john@example.com", phone: "08012345678", balance: 12500, status: "Active" },
+        { id: 2, name: "Mary James", email: "mary@example.com", phone: "08087654321", balance: 5000, status: "Blocked" },
+        { id: 3, name: "Peter Smith", email: "peter@example.com", phone: "08123456789", balance: 20000, status: "Active" },
+        { id: 4, name: "David Johnson", email: "david@example.com", phone: "09012345678", balance: 7800, status: "Active" },
+      ];
+      setAdminUsers(defaultUsers);
+      localStorage.setItem("datasub_admin_users", JSON.stringify(defaultUsers));
+    }
   }, []);
 
   // Sync messages periodically to capture new customer messages instantly
@@ -171,10 +195,20 @@ export default function AdminPage() {
           }
         } catch (e) {}
       }
+
+      const savedUsers = localStorage.getItem("datasub_admin_users");
+      if (savedUsers) {
+        try {
+          const parsedUsers = JSON.parse(savedUsers);
+          if (JSON.stringify(parsedUsers) !== JSON.stringify(adminUsers)) {
+            setAdminUsers(parsedUsers);
+          }
+        } catch (e) {}
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [mounted, messages, selectedUserEmail]);
+  }, [mounted, messages, selectedUserEmail, adminUsers]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -220,105 +254,167 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 text-gray-900 font-sans">
-      {/* Sidebar */}
-      <aside className="fixed hidden h-screen w-64 bg-gray-900 px-5 py-6 text-white lg:block">
-        <div className="flex items-center gap-2 text-xl font-bold uppercase tracking-tight">
-          <span className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 text-white font-extrabold text-xs">
-            DS
-          </span>
-          Admin Portal
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row font-sans text-slate-900 w-full">
+      
+      {/* Mobile Header / Navigation Bar */}
+      <header className="lg:hidden bg-[#0F172A] text-white px-5 py-4 flex items-center justify-between sticky top-0 z-40 shadow-md w-full">
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center font-black text-xs">SP</div>
+          <span className="font-extrabold text-sm tracking-tight">SurePlug Admin</span>
+        </Link>
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-1.5 hover:bg-slate-800 rounded transition-colors text-slate-300"
+        >
+          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </header>
+
+      {/* Mobile Drawer Overlay */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 bg-slate-900/60 z-40 backdrop-blur-xs" onClick={() => setIsMobileMenuOpen(false)} />
+      )}
+
+      {/* Sidebar Navigation - Shared across Admin Portal */}
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-[#0F172A] text-slate-300 flex flex-col shrink-0 z-50 border-r border-slate-800 transition-transform duration-300 transform lg:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} lg:static`}>
+        <div className="p-6 border-b border-slate-700/40 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-black text-sm">SP</div>
+            <span className="font-black text-white tracking-tight text-base">SurePlug Pro</span>
+          </Link>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-slate-400 hover:text-white cursor-pointer p-1">
+            <X size={18} />
+          </button>
         </div>
 
-        <nav className="mt-10 space-y-1">
+        <div className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          Admin Operations
+        </div>
+
+        <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto">
           <button
-            onClick={() => setActiveTab("overview")}
-            className={`w-full text-left rounded-xl px-4 py-3 font-semibold text-xs uppercase tracking-wider transition-all cursor-pointer ${
+            onClick={() => { setActiveTab("overview"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === "overview"
                 ? "bg-blue-600 text-white"
-                : "text-gray-400 hover:bg-white/10 hover:text-white"
+                : "text-slate-400 hover:bg-slate-800 hover:text-white"
             }`}
           >
-            Overview
+            <Home size={16} />
+            Overview Dashboard
           </button>
 
           <button
-            onClick={() => setActiveTab("support")}
-            className={`w-full text-left rounded-xl px-4 py-3 font-semibold text-xs uppercase tracking-wider flex items-center justify-between transition-all cursor-pointer ${
+            onClick={() => { setActiveTab("support"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === "support"
                 ? "bg-blue-600 text-white"
-                : "text-gray-400 hover:bg-white/10 hover:text-white"
+                : "text-slate-400 hover:bg-slate-800 hover:text-white"
             }`}
           >
-            <span>Live Chat</span>
-            <span className="bg-green-500 text-gray-900 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">
+            <span className="flex items-center gap-3">
+              <MessageCircle size={16} />
+              Live Chat
+            </span>
+            <span className="bg-green-500 text-slate-950 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">
               Live
             </span>
           </button>
 
           <button
-            onClick={() => setActiveTab("gateways")}
-            className={`w-full text-left rounded-xl px-4 py-3 font-semibold text-xs uppercase tracking-wider flex items-center justify-between transition-all cursor-pointer ${
+            onClick={() => { setActiveTab("gateways"); setIsMobileMenuOpen(false); }}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === "gateways"
                 ? "bg-blue-600 text-white"
-                : "text-gray-400 hover:bg-white/10 hover:text-white"
+                : "text-slate-400 hover:bg-slate-800 hover:text-white"
             }`}
           >
-            <span>VTU Gateways</span>
+            <span className="flex items-center gap-3">
+              <Database size={16} />
+              VTU Gateways
+            </span>
             <span className="bg-blue-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase">
               Dual
             </span>
           </button>
 
+          <div className="h-px bg-slate-800/60 my-2" />
+
           <Link
             href="/admin/users"
-            className="block rounded-xl px-4 py-3 font-semibold text-xs uppercase tracking-wider text-gray-400 hover:bg-white/10 hover:text-white"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
+            onClick={() => setIsMobileMenuOpen(false)}
           >
-            Users
+            <Users size={16} />
+            Users & Funding
           </Link>
 
           <Link
             href="/admin/transactions"
-            className="block rounded-xl px-4 py-3 font-semibold text-xs uppercase tracking-wider text-gray-400 hover:bg-white/10 hover:text-white"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
+            onClick={() => setIsMobileMenuOpen(false)}
           >
+            <History size={16} />
             Transactions
           </Link>
 
           <Link
             href="/admin/plans"
-            className="block rounded-xl px-4 py-3 font-semibold text-xs uppercase tracking-wider text-gray-400 hover:bg-white/10 hover:text-white"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
+            onClick={() => setIsMobileMenuOpen(false)}
           >
+            <CreditCard size={16} />
             Data Plans
           </Link>
 
           <Link
+            href="/admin/settings"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Settings size={16} />
+            Portal Settings
+          </Link>
+        </nav>
+
+        <div className="p-4 border-t border-slate-800/80">
+          <Link
             href="/dashboard"
-            className="block rounded-xl px-4 py-3 font-semibold text-xs uppercase tracking-wider text-gray-400 hover:bg-white/10 hover:text-white"
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-extrabold uppercase tracking-widest py-3 transition-colors text-center"
           >
             User Dashboard
           </Link>
-        </nav>
+        </div>
       </aside>
 
       {/* Main Content Area */}
-      <section className="lg:ml-64 min-h-screen flex flex-col justify-between">
-        <header className="flex items-center justify-between bg-white px-6 py-4 shadow-sm border-b border-gray-200">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">System Admin Control</p>
-            <h1 className="text-lg font-black uppercase tracking-tight text-slate-900">
-              {activeTab === "overview" ? "Dashboard Overview" : activeTab === "support" ? "Live Chat Management" : "VTU Gateway Configuration"}
-            </h1>
+      <section className="flex-1 min-h-screen flex flex-col justify-between overflow-x-hidden">
+        <header className="flex items-center justify-between bg-white px-6 py-4 shadow-xs border-b border-slate-200/80">
+          <div className="flex items-center gap-3">
+            {/* Hamburger button for mobile to draw attention if closed */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-1 text-slate-500 hover:text-slate-900 cursor-pointer"
+            >
+              <Menu size={20} />
+            </button>
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">System Admin Control</p>
+              <h1 className="text-sm font-black uppercase tracking-tight text-slate-900">
+                {activeTab === "overview" ? "Dashboard Overview" : activeTab === "support" ? "Live Chat Management" : "VTU Gateway Configuration"}
+              </h1>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="bg-slate-100 border border-slate-200 px-3 py-1 rounded text-xs font-bold text-slate-600 uppercase tracking-tight flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-green-600" />
-              admin@datasub.com
+            <span className="hidden sm:inline-flex bg-slate-100 border border-slate-200 px-3 py-1 rounded text-[10px] font-black text-slate-600 uppercase tracking-tight items-center gap-1.5">
+              <ShieldCheck size={13} className="text-green-600 shrink-0" />
+              admin@sureplug.com
             </span>
 
             <Link
               href="/dashboard"
-              className="rounded bg-gray-900 px-4 py-2 text-xs font-bold text-white uppercase tracking-wider hover:bg-gray-800 transition-colors"
+              className="rounded-xl bg-slate-900 hover:bg-slate-800 px-4 py-2 text-[10px] font-extrabold text-white uppercase tracking-wider transition-colors"
             >
               Exit Panel
             </Link>
@@ -344,7 +440,7 @@ export default function AdminPage() {
                         <Icon size={20} />
                       </div>
 
-                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{item.title}</p>
+                      <p className="text-xs font-extrabold uppercase tracking-wider text-slate-500">{item.title}</p>
                       <h2 className="mt-1 text-2xl font-black text-slate-900">{item.value}</h2>
                     </div>
                   );
@@ -365,7 +461,7 @@ export default function AdminPage() {
                       >
                         <div>
                           <p className="text-xs font-extrabold uppercase text-slate-800 tracking-tight">{order.service}</p>
-                          <p className="text-[11px] font-mono text-slate-500">{order.user}</p>
+                          <p className="text-[11px] font-mono font-bold text-slate-700">{order.user}</p>
                         </div>
 
                         <div className="text-left sm:text-right">
@@ -443,7 +539,7 @@ export default function AdminPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b text-left text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      <tr className="border-b border-slate-200 text-left text-[11px] font-black uppercase tracking-wider text-slate-800">
                         <th className="pb-3">Name</th>
                         <th className="pb-3">Email</th>
                         <th className="pb-3">Balance</th>
@@ -452,17 +548,19 @@ export default function AdminPage() {
                     </thead>
 
                     <tbody className="text-xs">
-                      {initialUsers.map((user) => (
-                        <tr key={user.email} className="border-b last:border-0 border-slate-100">
-                          <td className="py-3 font-extrabold text-slate-800 uppercase tracking-tight">{user.name}</td>
-                          <td className="py-3 font-mono text-slate-500">{user.email}</td>
-                          <td className="py-3 font-bold text-slate-900">{user.balance}</td>
-                          <td className="py-3">
+                      {adminUsers.map((user) => (
+                        <tr key={user.email} className="border-b last:border-0 border-slate-100 transition hover:bg-slate-50/50">
+                          <td className="py-3.5 font-black text-slate-950 uppercase tracking-tight text-xs">{user.name}</td>
+                          <td className="py-3.5 font-mono font-extrabold text-slate-700">{user.email}</td>
+                          <td className="py-3.5 font-black text-emerald-700">
+                            ₦{typeof user.balance === "number" ? user.balance.toLocaleString("en-US", { minimumFractionDigits: 2 }) : user.balance}
+                          </td>
+                          <td className="py-3.5">
                             <span
-                              className={`rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${
+                              className={`rounded-lg px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider border ${
                                 user.status === "Active"
-                                  ? "bg-green-100 text-green-700 border border-green-200"
-                                  : "bg-red-100 text-red-700 border border-red-200"
+                                  ? "bg-green-100 text-green-800 border-green-300"
+                                  : "bg-red-100 text-red-800 border-red-300"
                               }`}
                             >
                               {user.status}
@@ -470,6 +568,13 @@ export default function AdminPage() {
                           </td>
                         </tr>
                       ))}
+                      {adminUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="py-8 text-center text-slate-500 font-extrabold uppercase text-[10px] tracking-wider">
+                            No users available in list.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -873,6 +978,6 @@ export default function AdminPage() {
           </div>
         </footer>
       </section>
-    </main>
+    </div>
   );
 }

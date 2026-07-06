@@ -129,6 +129,15 @@ export default function DashboardPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
+
+  // Referral & User states
+  const [displayUserName, setDisplayUserName] = useState("TeeBest12");
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
+  const [referralCount, setReferralCount] = useState(0);
+  const [referralEarnings, setReferralEarnings] = useState(0);
+  const [referralLink, setReferralLink] = useState("");
+  const [copiedReferral, setCopiedReferral] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -138,12 +147,52 @@ export default function DashboardPage() {
       setShowUpdatePopup(true);
     }
 
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotifPermission(Notification.permission);
+    }
+
+    // Load user email and custom display name
+    const userStr = localStorage.getItem("datasub_user");
+    let currentEmail = "";
+    let name = "TeeBest12";
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        if (u.email) {
+          currentEmail = u.email;
+          setCurrentUserEmail(u.email);
+        }
+        if (u.name) {
+          name = u.name;
+          setDisplayUserName(u.name);
+        }
+      } catch (e) {}
+    }
+
     // Load balance from localStorage or set default
     const savedBalance = localStorage.getItem("datasub_balance");
     if (savedBalance) {
       setBalance(Number(savedBalance));
     } else {
       localStorage.setItem("datasub_balance", "25000");
+    }
+
+    // Construct invite link
+    const host = typeof window !== "undefined" ? window.location.origin : "https://sureplug.com";
+    const refUrl = `${host}/signup?ref=${currentEmail || "teebest12"}`;
+    setReferralLink(refUrl);
+
+    // Load referral stats from registered users
+    const savedUsers = localStorage.getItem("datasub_registered_users");
+    if (savedUsers) {
+      try {
+        const users = JSON.parse(savedUsers);
+        const record = users.find((u: any) => u.email === currentEmail.toLowerCase().trim());
+        if (record) {
+          setReferralCount(record.referralCount || 0);
+          setReferralEarnings(record.earnings || 0);
+        }
+      } catch (e) {}
     }
 
     // Load transactions from localStorage or set default
@@ -159,6 +208,22 @@ export default function DashboardPage() {
       localStorage.setItem("datasub_transactions", JSON.stringify(DEFAULT_TRANSACTIONS));
     }
   }, []);
+
+  const handleEnableNotifications = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    try {
+      const permission = await Notification.requestPermission();
+      setNotifPermission(permission);
+      if (permission === "granted") {
+        new Notification("SurePlug Pro Notifications Enabled! 🚀", {
+          body: "You will now receive instant desktop notifications whenever your transactions succeed.",
+          icon: "/globe.svg"
+        });
+      }
+    } catch (e) {
+      console.error("Error enabling notifications:", e);
+    }
+  };
 
   const dismissUpdatePopup = () => {
     setShowUpdatePopup(false);
@@ -195,8 +260,8 @@ export default function DashboardPage() {
       <aside className={`fixed inset-y-0 left-0 w-60 bg-[#0F172A] text-slate-300 flex flex-col shrink-0 z-50 border-r border-slate-800 transition-transform duration-300 transform lg:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="p-6 border-b border-slate-700/50 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">BB</div>
-            <span className="font-bold text-white tracking-tight text-base">BestBlug Pro</span>
+            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">SP</div>
+            <span className="font-bold text-white tracking-tight text-base">SurePlug Pro</span>
           </Link>
           <button onClick={() => setIsMobileMenuOpen(false)} className="text-slate-400 hover:text-white cursor-pointer p-1">
             <X size={18} />
@@ -300,8 +365,8 @@ export default function DashboardPage() {
       <aside className="w-60 bg-[#0F172A] text-slate-300 flex flex-col shrink-0 hidden lg:flex border-r border-slate-800">
         <div className="p-6 border-b border-slate-700/50">
           <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">BB</div>
-            <span className="font-bold text-white tracking-tight text-base">BestBlug Pro</span>
+            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">SP</div>
+            <span className="font-bold text-white tracking-tight text-base">SurePlug Pro</span>
           </Link>
         </div>
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto animate-fade-in">
@@ -403,7 +468,7 @@ export default function DashboardPage() {
             </button>
             <div className="flex items-center gap-1">
               <span className="text-slate-400 font-semibold uppercase hidden sm:inline">Welcome back,</span>
-              <span className="font-extrabold text-slate-800 dark:text-white uppercase">TeeBest12</span>
+              <span className="font-extrabold text-slate-800 dark:text-white uppercase">{displayUserName}</span>
             </div>
           </div>
           <div className="flex items-center gap-6">
@@ -498,6 +563,44 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Push Notification Setup Banner */}
+          {mounted && typeof window !== "undefined" && "Notification" in window && notifPermission === "default" && (
+            <div className="bg-blue-50 dark:bg-blue-950/20 border-l-4 border-blue-600 p-4 rounded-r-xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fade-in">
+              <div className="flex items-start gap-3">
+                <Bell className="text-blue-600 dark:text-blue-400 shrink-0 mt-0.5 animate-pulse" size={18} />
+                <div>
+                  <h4 className="text-xs font-black text-blue-800 dark:text-blue-300 uppercase tracking-widest">Enable Browser Push Notifications</h4>
+                  <p className="text-xs text-blue-700 dark:text-blue-400 font-medium mt-0.5">
+                    Get alerted instantly with native desktop and mobile notifications when your transactions complete successfully.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handleEnableNotifications}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-[10px] uppercase tracking-wider font-extrabold transition-colors shadow-sm cursor-pointer"
+                >
+                  Enable Alerts
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Notifications Blocked Warning Banner */}
+          {mounted && typeof window !== "undefined" && "Notification" in window && notifPermission === "denied" && (
+            <div className="bg-slate-100 dark:bg-slate-900 border-l-4 border-slate-500 p-4 rounded-r-xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-fade-in">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="text-slate-500 shrink-0 mt-0.5" size={18} />
+                <div>
+                  <h4 className="text-xs font-black text-slate-800 dark:text-slate-300 uppercase tracking-widest">Push Notifications Blocked</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5">
+                    SurePlug Pro needs browser notification permissions to send you real-time transaction alerts. Please enable them in your browser settings.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Spending analysis section removed as requested */}
 
           {/* Core Layout Grid */}
@@ -537,6 +640,61 @@ export default function DashboardPage() {
                 <p className="text-[11px] leading-relaxed text-slate-300">
                   New API documentation for automated cable, electricity, and airtime top-ups is now live. Complete client access tokens can be configured in your system settings.
                 </p>
+              </div>
+
+              {/* Referral & Earnings Portal Card */}
+              <div className="bg-white dark:bg-[#111827] p-5 rounded-xl border border-slate-200 dark:border-slate-800/80 shadow-sm transition-colors duration-200">
+                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800/60 pb-3 mb-4">
+                  <Gift className="text-blue-600 dark:text-blue-400 shrink-0" size={18} />
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-white">
+                    Refer & Earn Cash
+                  </h3>
+                </div>
+
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal mb-4 font-medium">
+                  Invite your friends to SurePlug! Copy your link and get a <strong className="text-blue-600 dark:text-blue-400">₦500 instant cash bonus</strong> as soon as they make their first wallet funding deposit.
+                </p>
+
+                {/* Referral Link Copy Bar */}
+                <div className="mb-4 space-y-1.5">
+                  <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Your Invite Link</span>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      readOnly
+                      value={referralLink}
+                      className="flex-1 bg-slate-50 dark:bg-slate-850/50 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-[10px] font-mono text-slate-600 dark:text-slate-300 outline-none select-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(referralLink);
+                        setCopiedReferral(true);
+                        setTimeout(() => setCopiedReferral(false), 2000);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-2 flex items-center justify-center cursor-pointer shrink-0 transition-colors"
+                      title="Copy invite link"
+                    >
+                      {copiedReferral ? <Check size={14} className="text-white" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Referral Stats Bento */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/40 p-3 rounded-lg text-center">
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Referred Friends</span>
+                    <span className="text-lg font-black text-slate-800 dark:text-white">
+                      {referralCount}
+                    </span>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/40 p-3 rounded-lg text-center">
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">Total Earnings</span>
+                    <span className="text-lg font-black text-green-600 dark:text-green-400">
+                      ₦{referralEarnings.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 

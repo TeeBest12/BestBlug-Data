@@ -1,6 +1,6 @@
 {
-  "name": "BestBlug",
-  "description": "Buy affordable mobile data plans, airtime, pay utility bills, and fund your wallet on this fully functional BestBlug VTU subscription dashboard.",
+  "name": "SurePlug",
+  "description": "Buy affordable mobile data plans, airtime, pay utility bills, and fund your wallet on this fully functional SurePlug VTU subscription dashboard.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

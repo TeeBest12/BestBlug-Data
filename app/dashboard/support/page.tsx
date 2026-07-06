@@ -16,14 +16,14 @@ const DEFAULT_CHATS: ChatMessage[] = [
   {
     id: "welcome-1",
     sender: "system",
-    text: "Welcome to BestBlug Premium Live Support! 🛡️ Our agents are online and ready to assist you in real-time.",
+    text: "Welcome to SurePlug Premium Live Support! 🛡️ Our agents are online and ready to assist you in real-time.",
     timestamp: "10:00 AM",
     userEmail: "all",
   },
   {
     id: "welcome-2",
     sender: "admin",
-    text: "Hello! Thank you for contacting BestBlug. If you have any questions regarding pending wallet funding, failed data delivery, or billing, please send us a message here.",
+    text: "Hello! Thank you for contacting SurePlug. If you have any questions regarding pending wallet funding, failed data delivery, or billing, please send us a message here.",
     timestamp: "10:01 AM",
     userEmail: "all",
   }
@@ -282,7 +282,7 @@ export default function SupportPage() {
 
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h3 className="text-xs font-black uppercase tracking-wider">BestBlug Support</h3>
+                      <h3 className="text-xs font-black uppercase tracking-wider">SurePlug Support</h3>
                       <span className="bg-blue-600/50 px-1.5 py-0.2 rounded text-[8px] font-bold uppercase tracking-widest text-blue-100">
                         Agent Online
                       </span>

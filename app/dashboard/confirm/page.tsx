@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, Smartphone, AlertTriangle, Wallet, Loader2 } from "lucide-react";
+import { sendBrowserNotification, addNotificationToHistory } from "@/lib/notifications";
 
 export default function ConfirmPage() {
   const router = useRouter();
@@ -131,6 +132,17 @@ export default function ConfirmPage() {
           gateway: result.gateway,
         };
         localStorage.setItem("datasub_last_success", JSON.stringify(successDetails));
+
+        // Trigger native browser notification and record in history
+        sendBrowserNotification(
+          "Subscription Successful! 🚀",
+          `Your ${tx.network} ${tx.plan} subscription to ${tx.phone} has been processed successfully.`
+        );
+        addNotificationToHistory(
+          "Subscription Successful",
+          `Your ${tx.network} ${tx.plan} subscription was successfully delivered to ${tx.phone}.`,
+          "success"
+        );
 
         // Clear pending transaction
         localStorage.removeItem("datasub_pending_tx");
