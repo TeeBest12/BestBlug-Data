@@ -167,13 +167,13 @@ export default function PlansPage() {
       <div className="overflow-x-auto rounded-3xl bg-white shadow-sm">
         <table className="w-full">
           <thead className="border-b bg-gray-50">
-            <tr className="text-left">
-              <th className="px-6 py-4">Network</th>
-              <th className="px-6 py-4">Plan</th>
-              <th className="px-6 py-4">Price</th>
-              <th className="px-6 py-4">Validity</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4">Actions</th>
+            <tr className="text-left text-slate-900 font-extrabold">
+              <th className="px-6 py-4 font-black">Network</th>
+              <th className="px-6 py-4 font-black">Plan</th>
+              <th className="px-6 py-4 font-black">Price</th>
+              <th className="px-6 py-4 font-black">Validity</th>
+              <th className="px-6 py-4 font-black">Status</th>
+              <th className="px-6 py-4 font-black">Actions</th>
             </tr>
           </thead>
 
@@ -181,30 +181,30 @@ export default function PlansPage() {
             {plans.map((plan) => (
               <tr
                 key={plan.id}
-                className="border-b hover:bg-gray-50"
+                className="border-b hover:bg-gray-50 text-slate-950 font-bold"
               >
-                <td className="px-6 py-4 font-medium">
+                <td className="px-6 py-4 font-extrabold text-slate-900">
                   {plan.network}
                 </td>
 
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 font-black text-slate-950">
                   {plan.plan}
                 </td>
 
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 font-black text-blue-700">
                   {plan.price}
                 </td>
 
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 font-extrabold text-slate-700">
                   {plan.validity}
                 </td>
 
                 <td className="px-6 py-4">
                   <span
-                    className={`rounded-full px-3 py-1 text-sm font-medium ${
+                    className={`rounded-full px-3 py-1 text-sm font-black ${
                       plan.status === "Active"
-                        ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-600"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
                     }`}
                   >
                     {plan.status}

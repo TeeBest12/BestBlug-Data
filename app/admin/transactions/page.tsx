@@ -81,12 +81,12 @@ export default function TransactionsPage() {
       <div className="overflow-x-auto rounded-3xl bg-white shadow-sm">
         <table className="w-full">
           <thead className="border-b bg-gray-50">
-            <tr className="text-left">
-              <th className="px-6 py-4">User</th>
-              <th className="px-6 py-4">Service</th>
-              <th className="px-6 py-4">Amount</th>
-              <th className="px-6 py-4">Date</th>
-              <th className="px-6 py-4">Status</th>
+            <tr className="text-left text-slate-900 font-extrabold">
+              <th className="px-6 py-4 font-black">User</th>
+              <th className="px-6 py-4 font-black">Service</th>
+              <th className="px-6 py-4 font-black">Amount</th>
+              <th className="px-6 py-4 font-black">Date</th>
+              <th className="px-6 py-4 font-black">Status</th>
             </tr>
           </thead>
 
@@ -94,36 +94,36 @@ export default function TransactionsPage() {
             {transactions.map((transaction) => (
               <tr
                 key={transaction.id}
-                className="border-b hover:bg-gray-50"
+                className="border-b hover:bg-gray-50 text-slate-950 font-bold"
               >
-                <td className="px-6 py-4">{transaction.user}</td>
-                <td className="px-6 py-4 font-medium">
+                <td className="px-6 py-4 font-extrabold text-slate-900">{transaction.user}</td>
+                <td className="px-6 py-4 font-black text-slate-950">
                   {transaction.service}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 font-black text-blue-700">
                   {transaction.amount}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 font-extrabold text-slate-700">
                   {transaction.date}
                 </td>
 
                 <td className="px-6 py-4">
                   {transaction.status === "Successful" && (
-                    <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-sm text-green-600">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-sm font-black text-green-700">
                       <CheckCircle size={14} />
                       Successful
                     </span>
                   )}
 
                   {transaction.status === "Pending" && (
-                    <span className="inline-flex items-center gap-2 rounded-full bg-yellow-100 px-3 py-1 text-sm text-yellow-600">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-yellow-100 px-3 py-1 text-sm font-black text-yellow-700">
                       <Clock size={14} />
                       Pending
                     </span>
                   )}
 
                   {transaction.status === "Failed" && (
-                    <span className="inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-sm text-red-600">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-sm font-black text-red-700">
                       <XCircle size={14} />
                       Failed
                     </span>

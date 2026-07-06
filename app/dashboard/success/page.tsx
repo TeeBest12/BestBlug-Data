@@ -88,20 +88,7 @@ export default function SuccessPage() {
           </div>
         </div>
 
-        {info.logs && info.logs.length > 0 && (
-          <div className="mt-5 rounded-xl bg-slate-950 p-4 border border-slate-900 text-left text-white font-mono text-[9px] space-y-1.5 shadow-inner">
-            <p className="text-slate-400 font-bold uppercase tracking-wider text-[8px] border-b border-slate-900 pb-1.5">
-              Secure Delivery Routing Log
-            </p>
-            <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
-              {info.logs.map((logLine: string, idx: number) => (
-                <p key={idx} className="text-slate-300 leading-relaxed">
-                  {logLine}
-                </p>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         <div className="mt-6 grid gap-3">
           <Link
