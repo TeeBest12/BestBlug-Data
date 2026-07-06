@@ -39,7 +39,34 @@ export default function BuyDataPage() {
     }
   }, []);
 
-  // Filter plans whenever network or plans change
+  const parsePlanToMB = (planStr: string): number => {
+    if (!planStr) return 0;
+    const cleaned = planStr.toUpperCase().replace(/\s+/g, "");
+    
+    // Try matching GB
+    const gbMatch = cleaned.match(/^([\d.]+)(GB|G)/);
+    if (gbMatch) {
+      return parseFloat(gbMatch[1]) * 1024;
+    }
+    
+    // Try matching MB
+    const mbMatch = cleaned.match(/^([\d.]+)(MB|M)/);
+    if (mbMatch) {
+      return parseFloat(mbMatch[1]);
+    }
+
+    // Try matching KB
+    const kbMatch = cleaned.match(/^([\d.]+)(KB|K)/);
+    if (kbMatch) {
+      return parseFloat(kbMatch[1]) / 1024;
+    }
+
+    // Fallback
+    const fallback = parseFloat(cleaned);
+    return isNaN(fallback) ? 0 : fallback;
+  };
+
+  // Filter and sort plans whenever network or plans change
   useEffect(() => {
     if (selectedNetwork) {
       const filtered = plans.filter(
@@ -47,6 +74,10 @@ export default function BuyDataPage() {
           p.network.toLowerCase() === selectedNetwork.toLowerCase() &&
           p.status === "Active"
       );
+      
+      // Sort in ascending order by size
+      filtered.sort((a, b) => parsePlanToMB(a.plan) - parsePlanToMB(b.plan));
+
       setFilteredPlans(filtered);
       setSelectedPlan(""); // Reset plan select on network change
     } else {

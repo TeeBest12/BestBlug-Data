@@ -18,7 +18,8 @@ import {
   Users,
   Activity,
   Percent,
-  Sliders
+  Sliders,
+  Bell
 } from "lucide-react";
 
 interface AdminSettings {
@@ -30,6 +31,10 @@ interface AdminSettings {
   supportGreeting: string;
   isSystemOffline: boolean;
   alertThreshold: number;
+  announcementTitle: string;
+  announcementMessage: string;
+  announcementActive: boolean;
+  announcementId: string;
 }
 
 const DEFAULT_SETTINGS: AdminSettings = {
@@ -41,6 +46,10 @@ const DEFAULT_SETTINGS: AdminSettings = {
   supportGreeting: "Hello! Thank you for contacting SurePlug. If you have any questions regarding pending wallet funding, failed data delivery, or billing, please send us a message here.",
   isSystemOffline: false,
   alertThreshold: 1000,
+  announcementTitle: "Welcome to SurePlug Pro! 🚀",
+  announcementMessage: "We have upgraded our network nodes for 5x faster VTU data deliveries. Enjoy automated instant funding on all wallets. Please contact support if you have any questions.",
+  announcementActive: true,
+  announcementId: "welcome-init",
 };
 
 export default function AdminSettingsPage() {
@@ -67,7 +76,12 @@ export default function AdminSettingsPage() {
   // Save changes
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem("datasub_admin_settings", JSON.stringify(settings));
+    const updatedSettings = {
+      ...settings,
+      announcementId: `announcement-${Date.now()}`
+    };
+    localStorage.setItem("datasub_admin_settings", JSON.stringify(updatedSettings));
+    setSettings(updatedSettings);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
   };
@@ -384,6 +398,82 @@ export default function AdminSettingsPage() {
                   </button>
                   <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">
                     {settings.isSystemOffline ? "Platform Suspended" : "Platform Active"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 4: User Announcement Pop-up Settings */}
+          <section className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden animate-fade-in">
+            <header className="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
+              <div className="h-8 w-8 bg-blue-50 border border-blue-200/40 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
+                <Bell size={16} className="stroke-[2.5px]" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">User Notifications</h3>
+                <h2 className="text-sm font-black uppercase text-slate-800 tracking-tight">System-Wide Announcement Popup</h2>
+              </div>
+            </header>
+
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-slate-400 font-medium leading-relaxed mb-1">
+                Configure a pop-up modal that appears automatically on the dashboard for all logged-in users when they access their portal.
+              </p>
+
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1.5 font-sans">
+                  Announcement Header / Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={settings.announcementTitle}
+                  onChange={(e) => setSettings({ ...settings, announcementTitle: e.target.value })}
+                  placeholder="e.g., Important Security Upgrade!"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-900 bg-slate-50/30 outline-none focus:border-blue-600 focus:bg-white transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1.5 font-sans">
+                  Detailed Notification Message
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={settings.announcementMessage}
+                  onChange={(e) => setSettings({ ...settings, announcementMessage: e.target.value })}
+                  placeholder="Type the message to display inside the user modal pop-up..."
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-900 bg-slate-50/30 outline-none focus:border-blue-600 focus:bg-white transition-all resize-none leading-relaxed"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <Bell size={16} className="text-slate-400 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-extrabold text-slate-800 uppercase">Popup Visibility Status</h4>
+                    <p className="text-[10px] text-slate-400 font-bold mt-0.5">Toggle whether the announcement pop-up should show up for users.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSettings({ ...settings, announcementActive: !settings.announcementActive })}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      settings.announcementActive ? "bg-blue-600" : "bg-slate-300"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        settings.announcementActive ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">
+                    {settings.announcementActive ? "Popup Display Enabled" : "Popup Display Disabled"}
                   </span>
                 </div>
               </div>

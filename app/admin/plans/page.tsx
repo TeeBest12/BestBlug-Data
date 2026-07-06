@@ -66,6 +66,45 @@ export default function PlansPage() {
     }
   }, []);
 
+  const parsePlanToMB = (planStr: string): number => {
+    if (!planStr) return 0;
+    const cleaned = planStr.toUpperCase().replace(/\s+/g, "");
+    
+    // Try matching GB
+    const gbMatch = cleaned.match(/^([\d.]+)(GB|G)/);
+    if (gbMatch) {
+      return parseFloat(gbMatch[1]) * 1024;
+    }
+    
+    // Try matching MB
+    const mbMatch = cleaned.match(/^([\d.]+)(MB|M)/);
+    if (mbMatch) {
+      return parseFloat(mbMatch[1]);
+    }
+
+    // Try matching KB
+    const kbMatch = cleaned.match(/^([\d.]+)(KB|K)/);
+    if (kbMatch) {
+      return parseFloat(kbMatch[1]) / 1024;
+    }
+
+    // Fallback
+    const fallback = parseFloat(cleaned);
+    return isNaN(fallback) ? 0 : fallback;
+  };
+
+  const sortedPlans = [...plans].sort((a, b) => {
+    const sizeA = parsePlanToMB(a.plan);
+    const sizeB = parsePlanToMB(b.plan);
+    if (sizeA !== sizeB) {
+      return sizeA - sizeB;
+    }
+    // Secondary sort: alphabetical by Network
+    const netA = (a.network || "").toLowerCase();
+    const netB = (b.network || "").toLowerCase();
+    return netA.localeCompare(netB);
+  });
+
   const savePlans = (newPlans: any[]) => {
     setPlans(newPlans);
     localStorage.setItem("datasub_plans", JSON.stringify(newPlans));
@@ -178,7 +217,7 @@ export default function PlansPage() {
           </thead>
 
           <tbody>
-            {plans.map((plan) => (
+            {sortedPlans.map((plan) => (
               <tr
                 key={plan.id}
                 className="border-b hover:bg-gray-50 text-slate-950 font-bold"

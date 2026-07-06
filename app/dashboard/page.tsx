@@ -128,6 +128,8 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [announcement, setAnnouncement] = useState({ title: "", message: "", id: "" });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
 
@@ -207,6 +209,53 @@ export default function DashboardPage() {
       setTransactions(DEFAULT_TRANSACTIONS);
       localStorage.setItem("datasub_transactions", JSON.stringify(DEFAULT_TRANSACTIONS));
     }
+
+    // Load Admin Announcement settings
+    const adminSettingsStr = localStorage.getItem("datasub_admin_settings");
+    if (adminSettingsStr) {
+      try {
+        const settings = JSON.parse(adminSettingsStr);
+        if (settings.announcementActive && settings.announcementTitle && settings.announcementMessage) {
+          const annId = settings.announcementId || "welcome-init";
+          const seenAnnId = localStorage.getItem("datasub_seen_announcement_id");
+          if (seenAnnId !== annId) {
+            setAnnouncement({
+              title: settings.announcementTitle,
+              message: settings.announcementMessage,
+              id: annId
+            });
+            setShowAnnouncement(true);
+          }
+        }
+      } catch (e) {}
+    } else {
+      // Fallback default announcement if admin settings doesn't exist yet
+      const fallbackSettings = {
+        bankName: "Wema Bank / Flutterwave",
+        accountNo: "0123456789",
+        accountName: "SurePlug Pro Collections",
+        minFunding: 500,
+        vtuDiscount: 2.5,
+        supportGreeting: "Hello! Thank you for contacting SurePlug. If you have any questions regarding pending wallet funding, failed data delivery, or billing, please send us a message here.",
+        isSystemOffline: false,
+        alertThreshold: 1000,
+        announcementTitle: "Welcome to SurePlug Pro! 🚀",
+        announcementMessage: "We have upgraded our network nodes for 5x faster VTU data deliveries. Enjoy automated instant funding on all wallets. Please contact support if you have any questions.",
+        announcementActive: true,
+        announcementId: "welcome-init",
+      };
+      localStorage.setItem("datasub_admin_settings", JSON.stringify(fallbackSettings));
+      
+      const seenAnnId = localStorage.getItem("datasub_seen_announcement_id");
+      if (seenAnnId !== "welcome-init") {
+        setAnnouncement({
+          title: fallbackSettings.announcementTitle,
+          message: fallbackSettings.announcementMessage,
+          id: "welcome-init"
+        });
+        setShowAnnouncement(true);
+      }
+    }
   }, []);
 
   const handleEnableNotifications = async () => {
@@ -228,6 +277,13 @@ export default function DashboardPage() {
   const dismissUpdatePopup = () => {
     setShowUpdatePopup(false);
     localStorage.setItem("datasub_seen_update_v1_1", "true");
+  };
+
+  const dismissAnnouncement = () => {
+    setShowAnnouncement(false);
+    if (announcement.id) {
+      localStorage.setItem("datasub_seen_announcement_id", announcement.id);
+    }
   };
 
   const handleCopy = (id: string, text: string) => {
@@ -815,6 +871,48 @@ export default function DashboardPage() {
           </div>
         </footer>
       </main>
+
+      {/* System-wide Admin Announcement Pop-up Notification */}
+      {showAnnouncement && (
+        <div id="admin-announcement-modal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden relative transition-colors duration-200">
+            {/* Top Close Button */}
+            <button
+              onClick={dismissAnnouncement}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+              title="Close Announcement"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Banner Decor */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white text-center flex flex-col items-center gap-2">
+              <div className="bg-white/20 p-2.5 rounded-full backdrop-blur-sm">
+                <Bell className="text-yellow-300 animate-pulse" size={24} />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest bg-blue-500/50 px-2 py-0.5 rounded text-blue-100">
+                Important Information
+              </span>
+              <h2 className="text-lg font-black uppercase tracking-tight leading-snug">{announcement.title}</h2>
+            </div>
+
+            {/* Announcement Message Body */}
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-bold leading-relaxed whitespace-pre-wrap text-center">
+                {announcement.message}
+              </p>
+
+              {/* Action Button */}
+              <button
+                onClick={dismissAnnouncement}
+                className="w-full mt-4 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-extrabold uppercase tracking-wider py-3 rounded-xl text-xs transition-colors shadow-md cursor-pointer"
+              >
+                Understood, Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Product Update Popup Notification */}
       {showUpdatePopup && (

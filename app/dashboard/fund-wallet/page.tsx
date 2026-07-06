@@ -21,6 +21,24 @@ import {
 } from "lucide-react";
 import { sendBrowserNotification, addNotificationToHistory } from "@/lib/notifications";
 
+function loadScript(src: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") {
+      resolve(false);
+      return;
+    }
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 const amounts = ["₦1,000", "₦2,000", "₦5,000", "₦10,000"];
 
 export default function FundWalletPage() {
@@ -61,6 +79,14 @@ export default function FundWalletPage() {
   
   // Copy feedback state
   const [copiedAcc, setCopiedAcc] = useState(false);
+
+  // Live Payment SDK states
+  const [loadingGateway, setLoadingGateway] = useState(false);
+  const [missingKeyModal, setMissingKeyModal] = useState<{
+    gateway: string;
+    envVar: string;
+    exampleValue: string;
+  } | null>(null);
 
   // Load user details and settings on mount
   useEffect(() => {
@@ -177,7 +203,7 @@ export default function FundWalletPage() {
 
   const finalAmount = getAmountNumber();
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (finalAmount <= 0) {
       alert("Please enter or select a valid funding amount.");
@@ -190,7 +216,124 @@ export default function FundWalletPage() {
     }
 
     if (gateway === "flutterwave") {
-      // Launch custom Flutterwave secure inline checkout
+      const publicKey = process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
+      if (!publicKey) {
+        setMissingKeyModal({
+          gateway: "Flutterwave",
+          envVar: "NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY",
+          exampleValue: "FLWPUBK_TEST-xxxxxxxxxxxxxxxxxxxxxxxx-X",
+        });
+        return;
+      }
+      await initiateLiveFlutterwave(publicKey);
+    } else {
+      const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+      if (!publicKey) {
+        setMissingKeyModal({
+          gateway: "Paystack",
+          envVar: "NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY",
+          exampleValue: "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        });
+        return;
+      }
+      await initiateLivePaystack(publicKey);
+    }
+  };
+
+  const initiateLiveFlutterwave = async (publicKey: string) => {
+    setLoadingGateway(true);
+    const loaded = await loadScript("https://checkout.flutterwave.com/v3.js");
+    setLoadingGateway(false);
+
+    if (!loaded) {
+      alert("Failed to load Flutterwave SDK. Please check your internet connection.");
+      return;
+    }
+
+    const txRef = "FW-TX-" + Date.now() + "-" + Math.floor(1000 + Math.random() * 9000);
+
+    try {
+      // @ts-ignore
+      const flutterwaveHandler = window.FlutterwaveCheckout({
+        public_key: publicKey,
+        tx_ref: txRef,
+        amount: finalAmount,
+        currency: "NGN",
+        payment_options: "card, banktransfer, ussd, qr",
+        customer: {
+          email: userEmail || "customer@example.com",
+          name: userName || "Customer",
+        },
+        customizations: {
+          title: "SurePlug Pro",
+          description: "Wallet Funding",
+        },
+        callback: function (data: any) {
+          completeFunding(finalAmount, "Flutterwave", data.transaction_id || txRef);
+          // @ts-ignore
+          flutterwaveHandler.close();
+        },
+        onclose: function () {
+          console.log("Flutterwave payment modal closed");
+        },
+      });
+    } catch (e) {
+      console.error(e);
+      alert("Error initializing Flutterwave payment. Please verify your public key format.");
+    }
+  };
+
+  const initiateLivePaystack = async (publicKey: string) => {
+    setLoadingGateway(true);
+    const loaded = await loadScript("https://js.paystack.co/v1/inline.js");
+    setLoadingGateway(false);
+
+    if (!loaded) {
+      alert("Failed to load Paystack SDK. Please check your internet connection.");
+      return;
+    }
+
+    const txRef = "PS-TX-" + Date.now() + "-" + Math.floor(1000 + Math.random() * 9000);
+
+    try {
+      // @ts-ignore
+      const paystackHandler = window.PaystackPop.setup({
+        key: publicKey,
+        email: userEmail || "customer@example.com",
+        amount: finalAmount * 100, // Paystack amount is in kobo
+        currency: "NGN",
+        ref: txRef,
+        metadata: {
+          custom_fields: [
+            {
+              display_name: "Customer Name",
+              variable_name: "customer_name",
+              value: userName || "Customer"
+            }
+          ]
+        },
+        callback: function (response: any) {
+          completeFunding(finalAmount, "Paystack", response.reference || txRef);
+        },
+        onClose: function () {
+          console.log("Paystack payment modal closed");
+        },
+      });
+      // @ts-ignore
+      paystackHandler.openIframe();
+    } catch (e) {
+      console.error(e);
+      alert("Error initializing Paystack payment. Please verify your public key format.");
+    }
+  };
+
+  const handleSimulatedFallback = () => {
+    if (!missingKeyModal) return;
+    const selectedGate = missingKeyModal.gateway.toLowerCase();
+    setMissingKeyModal(null);
+
+    if (selectedGate === "flutterwave") {
+      // Launch custom Flutterwave secure simulated inline checkout
       setFwStep("method");
       setCardNo("");
       setCardExpiry("");
@@ -200,8 +343,8 @@ export default function FundWalletPage() {
       setFwError("");
       setShowFWModal(true);
     } else {
-      // Direct fast checkout for Paystack
-      completeFunding();
+      // Fast simulated checkout for Paystack
+      completeFunding(finalAmount, "Paystack (Simulated)", "PS-SIM-" + Math.floor(10000000 + Math.random() * 90000000));
     }
   };
 
@@ -337,8 +480,9 @@ export default function FundWalletPage() {
     }, 1500);
   };
 
-  const completeFunding = () => {
-    const amountToFund = finalAmount;
+  const completeFunding = (amountOverride?: number, gatewayOverride?: string, refOverride?: string) => {
+    const amountToFund = amountOverride !== undefined ? amountOverride : finalAmount;
+    const activeGateway = gatewayOverride || gateway;
     // Get current balance
     const currentBalanceStr = localStorage.getItem("datasub_balance") || "25000";
     const currentBalance = parseFloat(currentBalanceStr);
@@ -392,7 +536,7 @@ export default function FundWalletPage() {
 
     localStorage.setItem("datasub_registered_users", JSON.stringify(updatedUsers));
 
-    const refId = "DSB-" + Math.floor(10000000 + Math.random() * 90000000);
+    const refId = refOverride || ("DSB-" + Math.floor(10000000 + Math.random() * 90000000));
     const dateStr = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
     const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -400,7 +544,7 @@ export default function FundWalletPage() {
     const newTx = {
       id: "#" + Math.floor(10000 + Math.random() * 90000),
       name: "Wallet Funding",
-      number: "—",
+      number: activeGateway.toUpperCase(),
       amount: `+₦${amountToFund.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
       status: "Successful",
       date: timeStr,
@@ -424,7 +568,7 @@ export default function FundWalletPage() {
     // Store success details
     const successDetails = {
       title: "Wallet Funding Successful",
-      description: `Your wallet has been funded with ₦${amountToFund.toLocaleString("en-US", { minimumFractionDigits: 2 })} successfully via ${gateway.toUpperCase()}.`,
+      description: `Your wallet has been funded with ₦${amountToFund.toLocaleString("en-US", { minimumFractionDigits: 2 })} successfully via ${activeGateway.toUpperCase()}.`,
       reference: refId,
       amount: `₦${amountToFund.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
       status: "Successful",
@@ -439,7 +583,7 @@ export default function FundWalletPage() {
     );
     addNotificationToHistory(
       "Wallet Funding Successful",
-      `Your wallet has been funded with ₦${amountToFund.toLocaleString("en-US", { minimumFractionDigits: 2 })} successfully via ${gateway.toUpperCase()}.`,
+      `Your wallet has been funded with ₦${amountToFund.toLocaleString("en-US", { minimumFractionDigits: 2 })} successfully via ${activeGateway.toUpperCase()}.`,
       "success"
     );
 
@@ -1022,6 +1166,73 @@ export default function FundWalletPage() {
             <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
               <Lock size={12} className="text-green-600" />
               <span>Secured by Flutterwave 3D-Secure</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Gateway script spinner */}
+      {loadingGateway && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex flex-col items-center justify-center z-50 text-white">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl flex flex-col items-center gap-4">
+            <RefreshCw className="animate-spin text-blue-600 dark:text-blue-400" size={32} />
+            <div className="text-center">
+              <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Securing Gateway Connection</h4>
+              <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Loading secure checkout SDK...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gateway Missing API Key Configuration Assistant */}
+      {missingKeyModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="w-full max-w-md bg-white dark:bg-slate-950 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden relative">
+            <button
+              onClick={() => setMissingKeyModal(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors p-1.5 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+              title="Close Dialog"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white text-center flex flex-col items-center gap-2">
+              <div className="bg-white/20 p-2.5 rounded-full backdrop-blur-sm">
+                <Lock className="text-yellow-300 animate-pulse" size={24} />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest bg-blue-500/50 px-2 py-0.5 rounded text-blue-100">
+                Integration Guide
+              </span>
+              <h2 className="text-base font-black uppercase tracking-tight leading-snug">{missingKeyModal.gateway} Credentials Required</h2>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="rounded-xl border border-blue-100 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-950/10 p-4">
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-bold leading-relaxed">
+                  You are activating the real, live **{missingKeyModal.gateway} checkout flow**! 
+                  To complete live or test transactions via your own gateway account, declare your public key in your environment variables:
+                </p>
+                <div className="mt-3.5 bg-slate-950 text-slate-300 p-3 rounded-xl font-mono text-[10px] space-y-1 select-all border border-slate-800 break-all">
+                  <div className="text-slate-500"># Inside .env or Secrets panel</div>
+                  <span className="text-emerald-400">{missingKeyModal.envVar}</span>="<span className="text-amber-300">{missingKeyModal.exampleValue}</span>"
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800/60 flex flex-col gap-2.5">
+                <button
+                  onClick={handleSimulatedFallback}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold uppercase tracking-wider py-3 rounded-xl text-xs transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Zap size={13} className="text-amber-300" />
+                  Run Simulator Sandbox Instead
+                </button>
+                <button
+                  onClick={() => setMissingKeyModal(null)}
+                  className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-extrabold uppercase tracking-wider py-3 rounded-xl text-[10px] transition-colors cursor-pointer"
+                >
+                  Close & Configure Later
+                </button>
+              </div>
             </div>
           </div>
         </div>
